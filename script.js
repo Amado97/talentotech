@@ -1,8 +1,10 @@
 // ============================================================
 //  SUPABASE CONFIG
 // ============================================================
-const SUPABASE_URL  = 'https://ekxgspjlaudcwicinyzp.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVreGdzcGpsYXVkY3dpY2lueXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0OTAxMzAsImV4cCI6MjA4OTA2NjEzMH0.hD5v670s4xXg6OE2hcADJKRP62bBpfmIChbaxbWDjNw';
+const SUPABASE_URL  = 'https://tcyfpjmgpidojdtrmdal.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjeWZwam1ncGlkb2pkdHJtZGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NzY1NTgsImV4cCI6MjA4OTU1MjU1OH0.675M8bOhdnKAViEaxVbanY-menLlZbU2KEv2Uq5JzzY';
+
+const SCHEMA = 'talento_tech';
 
 let db;
 if (typeof supabase !== 'undefined') {
@@ -12,6 +14,9 @@ if (typeof supabase !== 'undefined') {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+    },
+    db: {
+      schema: SCHEMA
     }
   });
 } else {
@@ -23,41 +28,41 @@ if (typeof supabase !== 'undefined') {
 // ============================================================
 let currentUser = null;
 let currentProfile = null;
-let userLikes = new Set();   // IDs de comentarios que el usuario ya likeó
-const PAGE_SLUG = 'home';    // ajusta si tu portafolio tiene varias páginas
+let userLikes = new Set();
+const PAGE_SLUG = 'home';
 
 // ============================================================
 //  DOM REFERENCES
 // ============================================================
 const $ = id => document.getElementById(id);
-const authModal         = $('auth-modal');
-const formLogin         = $('form-login');
-const formRegister      = $('form-register');
-const formForgot        = $('form-forgot');
-const formSuccess       = $('form-success');
-const tabLoginBtn       = $('tab-login');
-const tabRegisterBtn    = $('tab-register');
-const loginForm         = $('login-form');
-const registerForm      = $('register-form');
-const forgotForm        = $('forgot-form');
-const navUserInfo       = $('nav-user-info');
-const navUsername       = $('nav-username');
-const navAvatar         = $('nav-avatar');
-const btnOpenAuth       = $('btn-open-auth');
+const authModal           = $('auth-modal');
+const formLogin           = $('form-login');
+const formRegister        = $('form-register');
+const formForgot          = $('form-forgot');
+const formSuccess         = $('form-success');
+const tabLoginBtn         = $('tab-login');
+const tabRegisterBtn      = $('tab-register');
+const loginForm           = $('login-form');
+const registerForm        = $('register-form');
+const forgotForm          = $('forgot-form');
+const navUserInfo         = $('nav-user-info');
+const navUsername         = $('nav-username');
+const navAvatar           = $('nav-avatar');
+const btnOpenAuth         = $('btn-open-auth');
 const btnOpenAuthComments = $('btn-open-auth-comments');
-const btnCloseModal     = $('btn-close-modal');
-const btnLogout         = $('btn-logout');
-const commentLoginPrompt = $('comment-login-prompt');
-const commentFormWrapper = $('comment-form-wrapper');
-const commentForm       = $('comment-form');
-const commentInput      = $('comment-input');
-const charCount         = $('char-count');
-const commentsLoading   = $('comments-loading');
-const commentsEmpty     = $('comments-empty');
-const commentsContainer = $('comments-container');
-const toastContainer    = $('toast-container');
-const formAvatar        = $('form-avatar');
-const formUsernameLabel = $('form-username');
+const btnCloseModal       = $('btn-close-modal');
+const btnLogout           = $('btn-logout');
+const commentLoginPrompt  = $('comment-login-prompt');
+const commentFormWrapper  = $('comment-form-wrapper');
+const commentForm         = $('comment-form');
+const commentInput        = $('comment-input');
+const charCount           = $('char-count');
+const commentsLoading     = $('comments-loading');
+const commentsEmpty       = $('comments-empty');
+const commentsContainer   = $('comments-container');
+const toastContainer      = $('toast-container');
+const formAvatar          = $('form-avatar');
+const formUsernameLabel   = $('form-username');
 
 // ============================================================
 //  TOAST NOTIFICATIONS
@@ -112,7 +117,7 @@ function setButtonLoading(btn, loading) {
 // ============================================================
 //  PASSWORD STRENGTH
 // ============================================================
-const regPw      = $('reg-password');
+const regPw       = $('reg-password');
 const strengthFill  = $('strength-fill');
 const strengthLabel = $('strength-label');
 if (regPw) {
@@ -182,7 +187,7 @@ if (registerForm) {
       errEl.textContent = translateAuthError(error.message);
     } else {
       $('success-title').textContent   = '¡Registro exitoso!';
-      $('success-message').textContent = `Hemos enviado un correo de verificación a ${email}. Por favor revísalo y haz clic en el enlace para activar tu cuenta y volver aquí.`;
+      $('success-message').textContent = `Hemos enviado un correo de verificación a ${email}. Por favor revísalo y haz clic en el enlace para activar tu cuenta.`;
       showForm(formSuccess);
     }
   });
@@ -244,7 +249,7 @@ if (forgotForm) {
       errEl.textContent = translateAuthError(error.message);
     } else {
       $('success-title').textContent   = '¡Correo enviado!';
-      $('success-message').textContent = `Revisa tu bandeja de entrada en ${email}. Haz clic en el enlace para restablecer tu contraseña.`;
+      $('success-message').textContent = `Revisa tu bandeja de entrada en ${email}.`;
       showForm(formSuccess);
     }
   });
@@ -282,7 +287,7 @@ btnLogout?.addEventListener('click', async () => {
 });
 
 // ============================================================
-//  NAVBAR scroll effect + hamburger
+//  NAVBAR scroll effect
 // ============================================================
 const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => {
@@ -299,14 +304,13 @@ $('hamburger')?.addEventListener('click', () => {
 // ============================================================
 async function initApp() {
   console.log('Iniciando aplicación...');
-  
+
   if (!db) {
     console.error('Error: El cliente de base de datos no se inicializó.');
     showToast('Error de conexión con el servidor.', 'error');
     return;
   }
 
-  // Escuchar cambios de autenticación
   db.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth Event:', event, session?.user?.email);
 
@@ -314,7 +318,7 @@ async function initApp() {
       currentUser = session.user;
       updateNavUI(true);
       updateCommentFormUI(true);
-      
+
       try {
         await loadProfile();
         updateNavUI(true);
@@ -323,8 +327,7 @@ async function initApp() {
       } catch (e) {
         console.error('Error al cargar datos del usuario:', e);
       }
-      
-      // Recargar comentarios para ver botones de borrar/likes
+
       await loadComments();
     } else {
       currentUser    = null;
@@ -332,19 +335,15 @@ async function initApp() {
       userLikes      = new Set();
       updateNavUI(false);
       updateCommentFormUI(false);
-      // No recargamos para no saturar si ya se cargaron al inicio
     }
 
-    // Manejo de redirección post-confirmación de email (GitHub Pages compatible)
     if (event === 'SIGNED_IN' && (window.location.hash.includes('access_token') || window.location.search.includes('code'))) {
       showToast('¡Sesión iniciada correctamente!', 'success');
-      // Limpiar URL
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState(null, '', cleanUrl);
     }
   });
 
-  // 3. Verificación inicial de sesión
   try {
     const { data: { session }, error } = await db.auth.getSession();
     if (error) throw error;
@@ -357,7 +356,6 @@ async function initApp() {
     console.error('Error al obtener sesión inicial:', e);
   }
 
-  // 4. Cargar comentarios (con manejo de errores)
   try {
     await loadComments();
   } catch (e) {
@@ -367,11 +365,9 @@ async function initApp() {
   }
 }
 
-// Ejecutar inicialización
 initApp().catch(err => {
-    console.error('Error crítico en el arranque:', err);
+  console.error('Error crítico en el arranque:', err);
 });
-
 
 // ============================================================
 //  PERFIL
@@ -387,14 +383,13 @@ async function loadProfile() {
   if (!error && data) {
     currentProfile = data;
   } else {
-    // Se crea el perfil automáticamente por el trigger, pero si falla lo hacemos aquí
     const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
     const { data: newProfile } = await db
       .from('profiles')
       .upsert({
-        id:        currentUser.id,
-        full_name: name,
-        username:  currentUser.email.split('@')[0],
+        id:         currentUser.id,
+        full_name:  name,
+        username:   currentUser.email.split('@')[0],
         avatar_url: null
       })
       .select()
@@ -433,7 +428,7 @@ function updateCommentFormUI(loggedIn) {
     commentLoginPrompt.classList.add('hidden');
     commentFormWrapper.classList.remove('hidden');
     const name = getDisplayName();
-    formAvatar.textContent   = getAvatarInitials(name);
+    formAvatar.textContent        = getAvatarInitials(name);
     formUsernameLabel.textContent = name;
   } else {
     commentLoginPrompt.classList.remove('hidden');
@@ -493,7 +488,7 @@ commentForm?.addEventListener('submit', async e => {
 // ============================================================
 async function loadComments() {
   if (!commentsLoading) return;
-  
+
   commentsLoading.classList.remove('hidden');
   if (commentsEmpty) commentsEmpty.classList.add('hidden');
   if (commentsContainer) commentsContainer.classList.add('hidden');
@@ -502,10 +497,10 @@ async function loadComments() {
     const { data: comments, error } = await db
       .from('comments')
       .select(`
-        id, 
-        name, 
-        content, 
-        created_at, 
+        id,
+        name,
+        content,
+        created_at,
         user_id,
         comment_likes(id)
       `)
@@ -542,11 +537,11 @@ async function loadComments() {
 //  COMMENTS: RENDER
 // ============================================================
 function renderComment(c, i) {
-  const initials    = getAvatarInitials(c.name || 'U');
-  const likeCount   = c.likes_count || 0;
-  const isLiked     = userLikes.has(c.id);
-  const isOwner     = currentUser && currentUser.id === c.user_id;
-  const dateStr     = formatDate(c.created_at);
+  const initials  = getAvatarInitials(c.name || 'U');
+  const likeCount = c.likes_count || 0;
+  const isLiked   = userLikes.has(c.id);
+  const isOwner   = currentUser && currentUser.id === c.user_id;
+  const dateStr   = formatDate(c.created_at);
 
   const card = document.createElement('article');
   card.className = 'comment-card';
@@ -594,31 +589,23 @@ async function loadUserLikes() {
 async function toggleLike(commentId) {
   if (!currentUser) return openModal('login');
 
-  const btn        = document.getElementById(`like-btn-${commentId}`);
-  const countEl    = btn?.querySelector('.like-count');
-  const isLiked    = userLikes.has(commentId);
-  let   count      = parseInt(countEl?.textContent || '0');
+  const btn     = document.getElementById(`like-btn-${commentId}`);
+  const isLiked = userLikes.has(commentId);
+  let count     = parseInt(btn?.querySelector('.like-count')?.textContent || '0');
 
-  // Optimistic UI
   if (isLiked) {
     userLikes.delete(commentId);
     count--;
     btn.classList.remove('liked');
-    btn.querySelector('.like-count').textContent = count;
-    btn.textContent = '';
     btn.innerHTML = `🤍 <span class="like-count">${count}</span>`;
+    await db.from('comment_likes').delete()
+      .eq('comment_id', commentId)
+      .eq('user_id', currentUser.id);
   } else {
     userLikes.add(commentId);
     count++;
     btn.classList.add('liked');
     btn.innerHTML = `❤️ <span class="like-count">${count}</span>`;
-  }
-
-  if (isLiked) {
-    await db.from('comment_likes').delete()
-      .eq('comment_id', commentId)
-      .eq('user_id', currentUser.id);
-  } else {
     await db.from('comment_likes').insert({
       comment_id: commentId,
       user_id:    currentUser.id
@@ -653,17 +640,16 @@ async function deleteComment(commentId) {
 }
 
 // ============================================================
-//  REAL-TIME COMMENTS (Supabase Realtime)
+//  REAL-TIME COMMENTS
 // ============================================================
 const commentsChannel = db
-  .channel('public:comments')
+  .channel('talento_tech:comments')
   .on('postgres_changes', {
     event:  'INSERT',
-    schema: 'public',
+    schema: SCHEMA,
     table:  'comments',
     filter: `page_slug=eq.${PAGE_SLUG}`
   }, payload => {
-    // Solo recarga si el comentario no es del usuario actual (ya se ve instantáneamente)
     if (!currentUser || payload.new.user_id !== currentUser.id) {
       loadComments();
     }
@@ -682,14 +668,14 @@ function escapeHtml(str) {
 }
 
 function formatDate(iso) {
-  const diff = Date.now() - new Date(iso).getTime();
+  const diff  = Date.now() - new Date(iso).getTime();
   const mins  = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days  = Math.floor(diff / 86400000);
-  if (mins < 1)  return 'ahora mismo';
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1)   return 'ahora mismo';
+  if (mins < 60)  return `hace ${mins} min`;
   if (hours < 24) return `hace ${hours} h`;
-  if (days < 7)  return `hace ${days} días`;
+  if (days < 7)   return `hace ${days} días`;
   return new Date(iso).toLocaleDateString('es', { day:'numeric', month:'short', year:'numeric' });
 }
 
@@ -710,135 +696,84 @@ document.querySelectorAll('.skill-category').forEach(el => {
   el.querySelectorAll('.skill-fill').forEach(f => f.style.animationPlayState = 'paused');
   skillObserver.observe(el);
 });
-// ============================================================
-//  TALENTO TECH: RECENTLY ADDED LOGIC
-// ============================================================
 
-// Form Submission Simulation for Inscription
+// ============================================================
+//  INSCRIPTION FORM
+// ============================================================
 function showSuccess() {
-    const successMsg = document.getElementById('form-success-insc');
-    successMsg.classList.remove('hidden');
-    document.getElementById('registro-form').reset();
-    setTimeout(() => {
-        successMsg.classList.add('hidden');
-    }, 5000);
+  const successMsg = document.getElementById('form-success-insc');
+  successMsg.classList.remove('hidden');
+  document.getElementById('registro-form').reset();
+  setTimeout(() => {
+    successMsg.classList.add('hidden');
+  }, 5000);
 }
 
-// Chatbot Logic
+// ============================================================
+//  CHATBOT
+// ============================================================
 const chatbox = {
-    knowledgeBase: {
-        "inscripcion": "Para inscribirte, ve a la sección 'Formulario de Inscripción' en esta misma página, llena tus datos y selecciona tu área de interés.",
-        "bootcamps": "Ofrecemos bootcamps en Programación Web Full Stack, Inteligencia Artificial, Blockchain, Análisis de Datos, Cloud Computing y Ciberseguridad.",
-        "costo": "El programa Talento Tech es 100% gratuito y certificado por el MinTIC.",
-        "gratis": "¡Sí! El programa es totalmente gratuito.",
-        "requisitos": "Está dirigido a jóvenes y adultos colombianos con ganas de aprender habilidades digitales para el siglo XXI.",
-        "modalidad": "Las capacitaciones son presenciales en la región de Talento Tech.",
-        "default": "Disculpa, solo puedo responder dudas sobre el programa Talento Tech, sus bootcamps y la inscripción en esta página. ¿Puedes reformular tu pregunta?"
-    }
+  knowledgeBase: {
+    "inscripcion": "Para inscribirte, ve a la sección 'Formulario de Inscripción' en esta misma página, llena tus datos y selecciona tu área de interés.",
+    "bootcamps": "Ofrecemos bootcamps en Programación Web Full Stack, Inteligencia Artificial, Blockchain, Análisis de Datos, Cloud Computing y Ciberseguridad.",
+    "costo": "El programa Talento Tech es 100% gratuito y certificado por el MinTIC.",
+    "gratis": "¡Sí! El programa es totalmente gratuito.",
+    "requisitos": "Está dirigido a jóvenes y adultos colombianos con ganas de aprender habilidades digitales para el siglo XXI.",
+    "modalidad": "Las capacitaciones son presenciales en la región de Talento Tech.",
+    "default": "Disculpa, solo puedo responder dudas sobre el programa Talento Tech, sus bootcamps y la inscripción. ¿Puedes reformular tu pregunta?"
+  }
 };
 
 function toggleChat() {
-    const body = document.getElementById('chat-body');
-    const icon = document.getElementById('chat-toggle-icon');
-    if (body.classList.contains('hidden')) {
-        body.classList.remove('hidden');
-        icon.textContent = '▼';
-    } else {
-        body.classList.add('hidden');
-        icon.textContent = '▲';
-    }
+  const body = document.getElementById('chat-body');
+  const icon = document.getElementById('chat-toggle-icon');
+  if (body.classList.contains('hidden')) {
+    body.classList.remove('hidden');
+    icon.textContent = '▼';
+  } else {
+    body.classList.add('hidden');
+    icon.textContent = '▲';
+  }
 }
 
 function handleChatEnter(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
-    }
+  if (event.key === 'Enter') sendMessage();
 }
 
 function sendMessage() {
-    const inputField = document.getElementById('chat-input');
-    const msg = inputField.value.trim();
-    
-    if (msg === "") return;
-
-    addMessage(msg, 'user-msg');
-    inputField.value = '';
-
-    // Simulate typing delay
-    setTimeout(() => {
-        const response = generateChatResponse(msg);
-        addMessage(response, 'bot-msg');
-    }, 600);
+  const inputField = document.getElementById('chat-input');
+  const msg = inputField.value.trim();
+  if (msg === "") return;
+  addMessage(msg, 'user-msg');
+  inputField.value = '';
+  setTimeout(() => {
+    const response = generateChatResponse(msg);
+    addMessage(response, 'bot-msg');
+  }, 600);
 }
 
 function addMessage(text, className) {
-    const messagesContainer = document.getElementById('chat-messages');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = className;
-    msgDiv.textContent = text;
-    messagesContainer.appendChild(msgDiv);
-    
-    // Auto scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  const messagesContainer = document.getElementById('chat-messages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = className;
+  msgDiv.textContent = text;
+  messagesContainer.appendChild(msgDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 function generateChatResponse(userMsg) {
-    const lowerMsg = userMsg.toLowerCase();
-
-    // Inscripción
-    if (lowerMsg.includes('inscribir') || lowerMsg.includes('registro') || lowerMsg.includes('formulario')) {
-        return chatbox.knowledgeBase["inscripcion"];
-    }
-
-    // Bootcamps generales
-    if (lowerMsg.includes('curso') || lowerMsg.includes('bootcamp') || lowerMsg.includes('aprender') || lowerMsg.includes('habilidades')) {
-        return chatbox.knowledgeBase["bootcamps"];
-    }
-
-    // Costo
-    if (lowerMsg.includes('precio') || lowerMsg.includes('costo') || lowerMsg.includes('pagar') || lowerMsg.includes('gratis')) {
-        return chatbox.knowledgeBase["costo"];
-    }
-
-    // Requisitos
-    if (lowerMsg.includes('requisito') || lowerMsg.includes('quien puede')) {
-        return chatbox.knowledgeBase["requisitos"];
-    }
-
-    // Modalidad
-    if (lowerMsg.includes('presencial') || lowerMsg.includes('virtual') || lowerMsg.includes('modalidad')) {
-        return chatbox.knowledgeBase["modalidad"];
-    }
-
-    // Habilidades específicas
-    if (lowerMsg.includes('ciberseguridad')) {
-        return "La ciberseguridad se enfoca en proteger sistemas, redes y datos contra ataques digitales. En el bootcamp aprenderás seguridad de redes, hacking ético y protección de información.";
-    }
-
-    if (lowerMsg.includes('inteligencia artificial') || lowerMsg.includes('ia')) {
-        return "El bootcamp de Inteligencia Artificial enseña a crear modelos que pueden aprender de datos, como chatbots, sistemas de recomendación y automatización.";
-    }
-
-    if (lowerMsg.includes('programacion') || lowerMsg.includes('web')) {
-        return "En Programación Web aprenderás desarrollo Full Stack: HTML, CSS, JavaScript y tecnologías backend para crear aplicaciones completas.";
-    }
-
-    if (lowerMsg.includes('blockchain')) {
-        return "Blockchain es una tecnología que permite registrar transacciones de forma segura y descentralizada. Aprenderás contratos inteligentes y aplicaciones descentralizadas.";
-    }
-
-    if (lowerMsg.includes('datos') || lowerMsg.includes('analisis de datos')) {
-        return "En Análisis de Datos aprenderás a interpretar información usando herramientas de análisis para apoyar decisiones empresariales.";
-    }
-
-    if (lowerMsg.includes('cloud') || lowerMsg.includes('nube')) {
-        return "Arquitectura Cloud enseña a crear y desplegar aplicaciones en la nube utilizando infraestructuras escalables.";
-    }
-
-    // Saludo
-    if (lowerMsg.includes('hola') || lowerMsg.includes('saludos')) {
-        return "¡Hola! ¿En qué te puedo ayudar sobre Talento Tech?";
-    }
-
-    return chatbox.knowledgeBase["default"];
+  const lowerMsg = userMsg.toLowerCase();
+  if (lowerMsg.includes('inscribir') || lowerMsg.includes('registro') || lowerMsg.includes('formulario')) return chatbox.knowledgeBase["inscripcion"];
+  if (lowerMsg.includes('curso') || lowerMsg.includes('bootcamp') || lowerMsg.includes('aprender')) return chatbox.knowledgeBase["bootcamps"];
+  if (lowerMsg.includes('precio') || lowerMsg.includes('costo') || lowerMsg.includes('gratis')) return chatbox.knowledgeBase["costo"];
+  if (lowerMsg.includes('requisito')) return chatbox.knowledgeBase["requisitos"];
+  if (lowerMsg.includes('presencial') || lowerMsg.includes('modalidad')) return chatbox.knowledgeBase["modalidad"];
+  if (lowerMsg.includes('ciberseguridad')) return "La ciberseguridad se enfoca en proteger sistemas, redes y datos contra ataques digitales.";
+  if (lowerMsg.includes('inteligencia artificial') || lowerMsg.includes('ia')) return "El bootcamp de IA enseña a crear modelos que aprenden de datos, como chatbots y sistemas de recomendación.";
+  if (lowerMsg.includes('programacion') || lowerMsg.includes('web')) return "En Programación Web aprenderás desarrollo Full Stack: HTML, CSS, JavaScript y tecnologías backend.";
+  if (lowerMsg.includes('blockchain')) return "Blockchain permite registrar transacciones de forma segura y descentralizada. Aprenderás contratos inteligentes.";
+  if (lowerMsg.includes('datos')) return "En Análisis de Datos aprenderás a interpretar información para apoyar decisiones empresariales.";
+  if (lowerMsg.includes('cloud') || lowerMsg.includes('nube')) return "Arquitectura Cloud enseña a crear y desplegar aplicaciones en infraestructuras escalables.";
+  if (lowerMsg.includes('hola') || lowerMsg.includes('saludos')) return "¡Hola! ¿En qué te puedo ayudar sobre Talento Tech?";
+  return chatbox.knowledgeBase["default"];
 }
